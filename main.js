@@ -1,11 +1,18 @@
 
+let is_order_urgent_radio_1 = undefined;
+let is_order_urgent_radio_2 = undefined;
+let is_order_urgent_radio_3 = undefined;
+
+let approve_extra_important_cost;
+let non_urgent_order_date_input;
+
 let need_to_print_on_products_select_input = undefined;
 let need_to_order_products_select_input = undefined;
 let need_to_cut_checkbox_input = undefined;
 let products_from_the_client_input = undefined;
 let products_order = undefined;
 // files upload functionallity
-let uploaded_files_element = undefined;
+let uploaded_files = undefined;
 let order_delivery_radio_1 = undefined;
 let order_delivery_radio_2 = undefined;
 let order_delivery_address_input = undefined;
@@ -15,12 +22,87 @@ let client_graphics_text_textarea = undefined;
 
 // on document ready we bind the files input to the upload function
 document.addEventListener('DOMContentLoaded', function() {
-    document.getElementById('files').addEventListener('change', handleFileSelect, false);
-    uploaded_files_element = document.getElementById('uploaded-files');
+    document.getElementsByName('files[]')[0].addEventListener('change', handleFileSelect, false);
+    uploaded_files = document.getElementById('uploaded_files');
     init_fields_visibility();
     add_events_listeners_to_forms();
 });
 
+function get_file_cell(file_input_idx, file_name) {
+    let html = `
+    <div class="row">
+        <div class="col-md-4 mb-3">
+            <label for="file_input" class="form-label">שם הקובץ</label>
+              </label>
+              <input
+                type="text"
+                class="form-control"
+                id="file_input_name_${file_input_idx}"
+                placeholder=""
+                value="${file_name}"
+                disabled
+              />
+        </div>
+        <div class="col-md-4 mb-3">
+            <label for="file_input" class="form-label">רוחב הקובץ</label>
+                </label>
+                <input
+                type="text"
+                class="form-control"
+                id="file_input_width_${file_input_idx}"
+                placeholder=""
+                value=""
+                />
+                
+                <small class="text-muted">
+                <br/>   
+                שים לב! יש לציין רוחב, ולא גובה מקסימום 58 ס"מ (1 = גודל נוכחי)
+                </small>
+        </div>
+        <div class="col-md-2 mb-3">
+            <label for="file_input" class="form-label">כמות הדפסים</label>
+                </label>
+                <input
+                type="number"
+                class="form-control"
+                id="file_input_copies_${file_input_idx}"
+                placeholder=""
+                value=""
+                />
+            </div>
+        <div class="col-md-2 mb-3">
+        <label for="delete-btn" class="form-label"><br/></label>
+        <br/>
+            <button class="btn btn-danger" type="button" onclick="delete_file_cell(${file_input_idx})">מחק קובץ</button>
+        </div>
+        </div>
+`;
+    return html;
+}
+
+function delete_file_cell(file_index) {
+    // remove the file cell from the uploaded_files element by the file_index
+    // from there get the file name and remove it from the files input (has multiple files[] inputs)
+    // and remove the file cell from the uploaded_files element
+    // and update the total_files_length
+    debugger;
+    let file_name = document.getElementById(`file_input_name_${file_index}`).value;
+    let files_inputs = document.getElementsByName('files[]');
+    for (let i = 0; i < files_inputs.length; i++) {
+        let files = files_inputs[i].files;
+        for (let j = 0; j < files.length; j++) {
+            if (files[j].name === file_name) {
+                files_inputs[i].remove(j);
+            }
+        }
+    }
+    let file_cell = document.getElementById(`file_cell_${file_index}`);
+    file_cell.remove();
+    total_files_length--;
+
+}
+
+let total_files_length = 0;
 
 function handleFileSelect(evt) {
     // for every file (uploaded before / new uploaded) we will create a new div:
@@ -33,55 +115,41 @@ function handleFileSelect(evt) {
     // loop over the files
     for (let i = 0, f; f = files[i]; i++) {
         // create a new div
-        let new_file_div = document.createElement('div');
-        // new_file_div.className = 'col-md-6 mb-3';
-        // create a new input field for the file name
-        let new_file_name_input = document.createElement('input');
-        // set the input field type to text
-        new_file_name_input.type = 'text';
-        // set the input field class to form-control
-        new_file_name_input.className = 'form-control';
-        // set the input field value to the file name
-        new_file_name_input.value = f.name;
-        // set the input field to readonly
-        new_file_name_input.disabled = true;
-        // create a new input field for the file width
-        let new_file_width_input = document.createElement('input');
-        // set the input field type to text
-        new_file_width_input.type = 'text';
-        // set the input field class to form-control
-        new_file_width_input.className = 'form-control';
-        // set the input field placeholder to the file width
-        new_file_width_input.placeholder = 'אורך הקובץ, להשאיר ריק = גודל מקורי';
-        // create a new input field for the file copies
-        let new_file_copies_input = document.createElement('input');
-        // set the input field type to number
-        new_file_copies_input.type = 'text';
-        // set the input field class to form-control
-        new_file_copies_input.className = 'form-control';
-        // set the input field placeholder to the file copies
-        new_file_copies_input.placeholder = 'מספר עותקים';
-        // create a new delete button
-        let new_file_delete_button = document.createElement('button');
-        // set the button text to 'delete'
-        new_file_delete_button.innerText = 'delete';
-        new_file_delete_button.className = 'btn btn-danger';
-        // set the button onclick function to delete the file
-        new_file_delete_button.onclick = function() {
-            // remove the file div
-            new_file_div.remove();
-        }
-        // append the file name input to the file div
-        new_file_div.appendChild(new_file_name_input);
-        // append the file width input to the file div
-        new_file_div.appendChild(new_file_width_input);
-        // append the file copies input to the file div
-        new_file_div.appendChild(new_file_copies_input);
-        // append the file delete button to the file div
-        new_file_div.appendChild(new_file_delete_button);
-        // append the file div to the uploaded files div
-        uploaded_files_element.appendChild(new_file_div);
+        let div = document.createElement('div');
+        div.className = 'file-cell';
+        div.id = `file_cell_${total_files_length}`;
+        // add the file name to the div
+        div.innerHTML = get_file_cell(total_files_length, f.name);
+        // add the div to the uploaded_files_element
+        uploaded_files.appendChild(div);
+        total_files_length++;
     }
+
+    // hide the files input field and add a file upload input field
+    // <input
+            //     type="file"
+            //     class="form-control mb-3 mt-3"
+            //     name="files[]"
+            //     id="files"
+            //     multiple
+            //     accept="image/*,application/pdf"
+            //   />
+    let files_inputs = document.getElementsByName('files[]');
+    debugger;
+    // $(files_inputs).style.display = 'none';
+    for(let i = 0; i < files_inputs.length; i++) {
+        files_inputs[i].style.display = 'none';
+    }
+    let new_files_input = document.createElement('input');
+    new_files_input.type = 'file';
+    new_files_input.className = 'form-control mb-3 mt-3';
+    new_files_input.name = 'files[]';
+    new_files_input.id = 'files';
+    new_files_input.multiple = true;
+    new_files_input.accept = 'image/*,application/pdf';
+    new_files_input.addEventListener('change', handleFileSelect, false);
+    document.getElementById('files_input_container').appendChild(new_files_input);
+
 }
 
 
@@ -112,6 +180,12 @@ function init_fields_visibility() {
     is_graphic_final_radio_input_1 = document.getElementById('is_graphic_final_radio_input_1');
     is_graphic_final_radio_input_2 = document.getElementById('is_graphic_final_radio_input_2');
     client_graphics_text_textarea = document.getElementById('client_graphics_text_textarea');
+    is_order_urgent_radio_1 = document.getElementById('is_order_urgent_radio_1');
+    is_order_urgent_radio_2 = document.getElementById('is_order_urgent_radio_2');
+    is_order_urgent_radio_3 = document.getElementById('is_order_urgent_radio_3');
+    approve_extra_important_cost = document.getElementById('approve_extra_important_cost');
+    non_urgent_order_date_input = document.getElementById('non_urgent_order_date_input');
+
 
     // hide the need_to_order_products_select_input and need_to_cut_checkbox_input
     // to show and hide the parent with class = "col-md-7 mb-3" can be few levels up
@@ -121,6 +195,8 @@ function init_fields_visibility() {
     $(products_order).closest('.form-part').hide();
     $(order_delivery_address_input).closest('.form-part').hide();
     $(client_graphics_text_textarea).closest('.form-part').hide();
+    $(approve_extra_important_cost).closest('.form-part').hide();
+    $(non_urgent_order_date_input).closest('.form-part').hide();
 }
 
 
@@ -136,6 +212,24 @@ function order_delivery_logic(event) {
         $(order_delivery_address_input).closest('.form-part').hide();
     }
 }
+
+function is_order_urgent_logic(event) {
+    // if checked and value = today | tommorow:
+    // show approve_extra_important_cost
+    // else or regular
+    // hide approve_extra_important_cost
+    // show non_urgent_order_date_input
+    debugger;
+    if (event.target.checked && (event.target.value == 'today' || event.target.value == 'tommorow')) {
+        $(approve_extra_important_cost).closest('.form-part').show();
+        $(non_urgent_order_date_input).closest('.form-part').hide();
+    } else {
+        $(approve_extra_important_cost).closest('.form-part').hide();
+        $(non_urgent_order_date_input).closest('.form-part').show();
+    }
+}
+
+
 //// logic of hidden and revileaning forms
 function add_events_listeners_to_forms() {
     // add event listener to the form select
@@ -148,6 +242,10 @@ function add_events_listeners_to_forms() {
 
     is_graphic_final_radio_input_1.addEventListener('change', is_graphic_final_logic);
     is_graphic_final_radio_input_2.addEventListener('change', is_graphic_final_logic);
+
+    is_order_urgent_radio_1.addEventListener('change', is_order_urgent_logic);
+    is_order_urgent_radio_2.addEventListener('change', is_order_urgent_logic);
+    is_order_urgent_radio_3.addEventListener('change', is_order_urgent_logic);
 }
 
 function is_graphic_final_logic(event) {
